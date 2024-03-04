@@ -20,7 +20,7 @@ class CategoryNormalizer implements NormalizerInterface
 
         // Modifier le chemin de l'image pour qu'il soit absolu
         if (isset($data['image'])) {
-            $data['image'] = 'http://localhost:8000/images/' . $data['image'];
+            $data['image'] = 'https://resto-back-t5ol.onrender.com/images/' . $data['image'];
         }
 
         return $data;
