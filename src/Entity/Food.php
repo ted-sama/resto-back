@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Serializer\Annotation\Groups;
 use App\Repository\FoodRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -12,11 +14,11 @@ class Food
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['foodList', 'foodByCategory'])]
+    #[Groups(['foodList', 'foodByCategory', 'cart'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['foodList', 'foodByCategory'])]
+    #[Groups(['foodList', 'foodByCategory', 'cart'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
@@ -24,7 +26,7 @@ class Food
     private ?string $description = null;
 
     #[ORM\Column]
-    #[Groups(['foodList', 'foodByCategory'])]
+    #[Groups(['foodList', 'foodByCategory', 'cart'])]
     private ?float $price = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -42,6 +44,14 @@ class Food
     #[ORM\ManyToOne(inversedBy: 'foods')]
     #[Groups(['foodList'])]
     private ?Category $category = null;
+
+    #[ORM\OneToMany(targetEntity: CartItem::class, mappedBy: 'food')]
+    private Collection $cartItems;
+
+    public function __construct()
+    {
+        $this->cartItems = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -128,6 +138,36 @@ class Food
     public function setCategory(?Category $category): static
     {
         $this->category = $category;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, CartItem>
+     */
+    public function getCartItems(): Collection
+    {
+        return $this->cartItems;
+    }
+
+    public function addCartItem(CartItem $cartItem): static
+    {
+        if (!$this->cartItems->contains($cartItem)) {
+            $this->cartItems->add($cartItem);
+            $cartItem->setFood($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCartItem(CartItem $cartItem): static
+    {
+        if ($this->cartItems->removeElement($cartItem)) {
+            // set the owning side to null (unless already changed)
+            if ($cartItem->getFood() === $this) {
+                $cartItem->setFood(null);
+            }
+        }
 
         return $this;
     }

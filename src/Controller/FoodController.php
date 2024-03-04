@@ -50,8 +50,16 @@ class FoodController extends AbstractController
         $food->setName($request->request->get('name'));
         $food->setDescription($request->request->get('description'));
         $food->setPrice($request->request->get('price'));
-        $food->setFeatured($request->request->get('featured'));
-        $food->setActive($request->request->get('active'));
+        if ($request->request->get('featured') === 'true') {
+            $food->setFeatured(true);
+        } else {
+            $food->setFeatured(false);
+        }
+        if ($request->request->get('active') === 'true') {
+            $food->setActive(true);
+        } else {
+            $food->setActive(false);
+        }
         $food->setCategory($categoryRepository->find($request->request->get('category_id')));
         $food->setImage($fileUploader->upload($uploadedFile));
 
@@ -100,11 +108,19 @@ class FoodController extends AbstractController
         }
 
         if ($request->request->get('featured')) {
-            $food->setFeatured($request->request->get('featured'));
+            if ($request->request->get('featured') === 'true') {
+                $food->setFeatured(true);
+            } else {
+                $food->setFeatured(false);
+            }
         }
 
         if ($request->request->get('active')) {
-            $food->setActive($request->request->get('active'));
+            if ($request->request->get('active') === 'true') {
+                $food->setActive(true);
+            } else {
+                $food->setActive(false);
+            }
         }
 
         if ($request->request->get('category_id')) {

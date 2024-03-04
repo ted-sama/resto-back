@@ -61,8 +61,16 @@ class CategoryController extends AbstractController
 
         $category = new Category();
         $category->setName($request->request->get('name'));
-        $category->setFeatured($request->request->get('featured'));
-        $category->setActive($request->request->get('active'));
+        if ($request->request->get('featured') === 'true') {
+            $category->setFeatured(true);
+        } else {
+            $category->setFeatured(false);
+        }
+        if ($request->request->get('active') === 'true') {
+            $category->setActive(true);
+        } else {
+            $category->setActive(false);
+        }
         $category->setImage($fileUploader->upload($uploadedFile));
 
         $em->persist($category);
@@ -102,11 +110,19 @@ class CategoryController extends AbstractController
         }
 
         if ($request->request->get('featured')) {
-            $category->setFeatured($request->request->get('featured'));
+            if ($request->request->get('featured') === 'true') {
+                $category->setFeatured(true);
+            } else {
+                $category->setFeatured(false);
+            }
         }
 
         if ($request->request->get('active')) {
-            $category->setActive($request->request->get('active'));
+            if ($request->request->get('active') === 'true') {
+                $category->setActive(true);
+            } else {
+                $category->setActive(false);
+            }
         }
 
         $em->persist($category);

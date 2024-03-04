@@ -20,6 +20,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $firstName = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $lastName = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $phoneNumber = null;
+
     #[ORM\Column]
     private array $roles = [];
 
@@ -32,9 +41,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Order::class, mappedBy: 'user')]
     private Collection $orders;
 
+    #[ORM\OneToMany(targetEntity: CartItem::class, mappedBy: 'user')]
+    private Collection $cartItems;
+
     public function __construct()
     {
         $this->orders = new ArrayCollection();
+        $this->cartItems = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -50,6 +63,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): static
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
+
+    public function setFirstName(string $firstName): static
+    {
+        $this->firstName = $firstName;
+
+        return $this;
+    }
+
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    public function setLastName(string $lastName): static
+    {
+        $this->lastName = $lastName;
+
+        return $this;
+    }
+
+    public function getPhoneNumber(): ?string
+    {
+        return $this->phoneNumber;
+    }
+
+    public function setPhoneNumber(string $phoneNumber): static
+    {
+        $this->phoneNumber = $phoneNumber;
 
         return $this;
     }
@@ -139,6 +188,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($order->getUser() === $this) {
                 $order->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, CartItem>
+     */
+    public function getCartItems(): Collection
+    {
+        return $this->cartItems;
+    }
+
+    public function addCartItem(CartItem $cartItem): static
+    {
+        if (!$this->cartItems->contains($cartItem)) {
+            $this->cartItems->add($cartItem);
+            $cartItem->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCartItem(CartItem $cartItem): static
+    {
+        if ($this->cartItems->removeElement($cartItem)) {
+            // set the owning side to null (unless already changed)
+            if ($cartItem->getUser() === $this) {
+                $cartItem->setUser(null);
             }
         }
 
