@@ -5,7 +5,7 @@ services:
         build: docker/php
         container_name: tutorial_symfony
         ports:
-          - "8741:80"
+          - "8000:80"
         volumes:
             - ./vhosts:/etc/apache2/sites-enabled
             - ./:/var/www
