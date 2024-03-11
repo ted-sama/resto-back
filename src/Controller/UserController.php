@@ -60,4 +60,30 @@ class UserController extends AbstractController
 
         return new JsonResponse(['message' => 'User created'], Response::HTTP_CREATED);
     }
+
+    #[Route('/api/user/me', name: 'getCurrentUser', methods: ['GET'])]
+    public function getCurrentUser(): JsonResponse
+    {
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        return new JsonResponse([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'first_name' => $user->getFirstName(),
+            'last_name' => $user->getLastName(),
+            'phone_number' => $user->getPhoneNumber(),
+        ]);
+    }
+
+    #[Route('/api/user/me/role', name: 'getCurrentUser', methods: ['GET'])]
+    public function getCurrentUserRole(): JsonResponse
+    {
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        return new JsonResponse([
+            'role' => $user->getRoles(),
+        ]);
+    }
 }
