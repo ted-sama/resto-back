@@ -86,4 +86,76 @@ class UserController extends AbstractController
             'role' => $user->getRoles(),
         ]);
     }
+
+    #[Route('api/user/{id}', name: 'getUserById', methods: ['GET'])]
+    public function getUserById(int $id, UserRepository $userRepository): JsonResponse
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return new JsonResponse([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'first_name' => $user->getFirstName(),
+            'last_name' => $user->getLastName(),
+            'phone_number' => $user->getPhoneNumber(),
+            'role' => $user->getRoles(),
+        ]);
+    }
+
+    #[Route('/api/user/{id}', name: 'updateUser', methods: ['PUT'])]
+    public function updateUser(int $id, UserRepository $userRepository, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $payload = json_decode($request->getContent(), true);
+
+        if (empty($payload['email'])) {
+            return new JsonResponse(['error' => 'Email is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (empty($payload['first_name'])) {
+            return new JsonResponse(['error' => 'First name is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (empty($payload['last_name'])) {
+            return new JsonResponse(['error' => 'Last name is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (empty($payload['phone_number'])) {
+            return new JsonResponse(['error' => 'Phone number is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $user->setEmail($payload['email']);
+        $user->setFirstName($payload['first_name']);
+        $user->setLastName($payload['last_name']);
+        $user->setPhoneNumber($payload['phone_number']);
+
+        $em->persist($user);
+        $em->flush();
+
+        return new JsonResponse(['message' => 'User updated'], Response::HTTP_OK);
+    }
+
+    #[Route('/api/user/{id}', name: 'deleteUser', methods: ['DELETE'])]
+    public function deleteUser(int $id, UserRepository $userRepository, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $em->remove($user);
+        $em->flush();
+
+        return new JsonResponse(['message' => 'User deleted'], Response::HTTP_OK);
+    }
 }
