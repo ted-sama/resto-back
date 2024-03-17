@@ -22,7 +22,18 @@ class FoodController extends AbstractController
     #[Route('/api/foods', name: 'getFoods', methods: ['GET'])]
     public function getFoodList(FoodRepository $foodRepository, SerializerInterface $serializer): JsonResponse
     {
-        $foodList = $foodRepository->findAll();
+        // filter if query name is set else return all foods
+        if (isset($_GET['name'])) {
+            // if includes name in category name like %name%
+            $foodList = $foodRepository->createQueryBuilder('f')
+                ->where('f.name LIKE :name')
+                ->setParameter('name', '%' . $_GET['name'] . '%')
+                ->getQuery()
+                ->getResult();
+        } else {
+            $foodList = $foodRepository->findAll();
+        }
+
         $jsonFoodList = $serializer->serialize($foodList, 'json', ['groups' => 'foodList']);
 
         return new JsonResponse($jsonFoodList, Response::HTTP_OK, [], true);
@@ -78,7 +89,7 @@ class FoodController extends AbstractController
         $em->remove($food);
         $em->flush();
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        return new JsonResponse(['message' => 'Food deleted'], Response::HTTP_OK);
     }
 
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour mettre à jour un plat')]

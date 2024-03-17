@@ -21,7 +21,18 @@ class CategoryController extends AbstractController
     #[Route('/api/categories', name: 'getCategories', methods: ['GET'])]
     public function getCategoryList(CategoryRepository $categoryRepository, SerializerInterface $serializer): JsonResponse
     {
-        $categoryList = $categoryRepository->findAll();
+        // filter if query name is set else return all categories
+        if (isset($_GET['name'])) {
+            // if includes name in category name like %name%
+            $categoryList = $categoryRepository->createQueryBuilder('c')
+                ->where('c.name LIKE :name')
+                ->setParameter('name', '%' . $_GET['name'] . '%')
+                ->getQuery()
+                ->getResult();
+        } else {
+            $categoryList = $categoryRepository->findAll();
+        }
+
         $jsonCategoryList = $serializer->serialize($categoryList, 'json', ['groups' => 'categoryList']);
 
         return new JsonResponse($jsonCategoryList, Response::HTTP_OK, [], true);
@@ -88,7 +99,7 @@ class CategoryController extends AbstractController
         $em->remove($category);
         $em->flush();
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        return new JsonResponse(['message' => 'Category deleted'], Response::HTTP_OK);
     }
 
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour mettre à jour une catégorie')]

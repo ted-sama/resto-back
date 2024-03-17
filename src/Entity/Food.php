@@ -30,7 +30,7 @@ class Food
     private ?float $price = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['foodList', 'foodByCategory'])]
+    #[Groups(['foodList', 'foodByCategory', 'cart'])]
     private ?string $image = null;
 
     #[ORM\Column]

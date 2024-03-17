@@ -72,6 +72,47 @@ class CartController extends AbstractController
         return new JsonResponse($jsonUserCart, Response::HTTP_OK, [], true);
     }
 
+    #[Route('/api/cart/quantity', name: 'setQuantity', methods: ['POST'])]
+    public function setQuantity(SerializerInterface $serializer, FoodRepository $foodRepository, CartItemRepository $cartRepository, EntityManagerInterface $em, Request $request): JsonResponse
+    {
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        $payload = json_decode($request->getContent(), true);
+
+        $food = $foodRepository->find($payload['item_id']);
+
+        if (!$food) {
+            return new JsonResponse(['error' => 'Item not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $foodToUpdate = $cartRepository->findOneBy(['food' => $food, 'user' => $user]);
+
+        if (!$foodToUpdate) {
+            return new JsonResponse(['error' => 'Item not found in cart'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($payload["quantity"] <= 0) {
+            $em->remove($foodToUpdate);
+            $em->flush();
+
+            $userCart = $cartRepository->findBy(['user' => $user]);
+            $jsonUserCart = $serializer->serialize($userCart, 'json', ['groups' => 'cart']);
+
+            return new JsonResponse($jsonUserCart, Response::HTTP_OK, [], true);
+        }
+
+        $foodToUpdate->setQuantity($payload["quantity"]);
+
+        $em->persist($foodToUpdate);
+        $em->flush();
+
+        $userCart = $cartRepository->findBy(['user' => $user]);
+        $jsonUserCart = $serializer->serialize($userCart, 'json', ['groups' => 'cart']);
+
+        return new JsonResponse($jsonUserCart, Response::HTTP_OK, [], true);
+    }
+
     #[Route('/api/cart', name: 'getCart', methods: ['GET'])]
     public function getCart(CartItemRepository $cartRepository, SerializerInterface $serializer): JsonResponse
     {
