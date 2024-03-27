@@ -106,7 +106,7 @@ class OrderController extends AbstractController
             return new JsonResponse(['error' => 'Status is required'], Response::HTTP_BAD_REQUEST);
         }
 
-        if (!in_array($payload['status'], ['pending', 'delivered', 'canceled'])) {
+        if (!in_array($payload['status'], ['pending', 'delivered', 'cancelled'])) {
             return new JsonResponse(['error' => 'Invalid status'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -145,9 +145,55 @@ class OrderController extends AbstractController
                     'id' => $order->getUser()->getId(),
                     'email' => $order->getUser()->getEmail(),
                 ],
+                // order details in array format
+                'order_details' => array_map(function (OrderDetail $orderDetail) {
+                    return [
+                        'food' => $orderDetail->getFood()->getName(),
+                        'unit_price' => $orderDetail->getUnitPrice(),
+                        'quantity' => $orderDetail->getQuantity(),
+                    ];
+                }, $order->getOrderDetails()->toArray()),
                 'note' => $order->getNote(),
             ];
         }
+
+        return new JsonResponse($data, Response::HTTP_OK);
+    }
+
+    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour voir les détails d\'une commande')]
+    #[Route('/api/orders/{id}', name: 'getOrderById', methods: ['GET'])]
+    public function getOrderById(Order $order): JsonResponse
+    {
+        $data = [
+            'id' => $order->getId(),
+            'status' => $order->getStatus(),
+            'total_price' => $order->getTotalPrice(),
+            'total_items' => $order->getTotalItems(),
+            'created_at' => $order->getCreatedAt(),
+            // address in object format
+            'shipping_info' => [
+                'address' => $order->getAddress(),
+                'city' => $order->getCity(),
+                'zip' => $order->getZip(),
+                'country' => $order->getCountry(),
+            ],
+            // user infos
+            'user' => [
+                'id' => $order->getUser()->getId(),
+                'email' => $order->getUser()->getEmail(),
+            ],
+            // order details in array format
+            'order_details' => array_map(function (OrderDetail $orderDetail) {
+                return [
+                    // food image rename to include path
+                    'image' => $_ENV["IMG_URL"] . $orderDetail->getFood()->getImage(),
+                    'food' => $orderDetail->getFood()->getName(),
+                    'unit_price' => $orderDetail->getUnitPrice(),
+                    'quantity' => $orderDetail->getQuantity(),
+                ];
+            }, $order->getOrderDetails()->toArray()),
+            'note' => $order->getNote(),
+        ];
 
         return new JsonResponse($data, Response::HTTP_OK);
     }
