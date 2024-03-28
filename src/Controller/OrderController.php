@@ -118,6 +118,45 @@ class OrderController extends AbstractController
         return new JsonResponse(['message' => 'Order status updated successfully'], Response::HTTP_OK);
     }
 
+    #[Route('/api/orders/me', name: 'getMyOrders', methods: ['GET'])]
+    public function getMyOrders(OrderRepository $orderRepository): JsonResponse
+    {
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        $orders = $orderRepository->findBy(['user' => $user]);
+
+        $data = [];
+
+        foreach ($orders as $order) {
+            $data[] = [
+                'id' => $order->getId(),
+                'status' => $order->getStatus(),
+                'total_price' => $order->getTotalPrice(),
+                'total_items' => $order->getTotalItems(),
+                'created_at' => $order->getCreatedAt(),
+                // address in object format
+                'shipping_info' => [
+                    'address' => $order->getAddress(),
+                    'city' => $order->getCity(),
+                    'zip' => $order->getZip(),
+                    'country' => $order->getCountry(),
+                ],
+                // order details in array format
+                'order_details' => array_map(function (OrderDetail $orderDetail) {
+                    return [
+                        'food' => $orderDetail->getFood()->getName(),
+                        'unit_price' => $orderDetail->getUnitPrice(),
+                        'quantity' => $orderDetail->getQuantity(),
+                    ];
+                }, $order->getOrderDetails()->toArray()),
+                'note' => $order->getNote(),
+            ];
+        }
+
+        return new JsonResponse($data, Response::HTTP_OK);
+    }
+
     #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour voir les commandes')]
     #[Route('/api/orders', name: 'getOrders', methods: ['GET'])]
     public function getOrders(OrderRepository $orderRepository): JsonResponse
@@ -160,7 +199,6 @@ class OrderController extends AbstractController
         return new JsonResponse($data, Response::HTTP_OK);
     }
 
-    #[IsGranted('ROLE_ADMIN', message: 'Vous n\'avez pas les droits suffisants pour voir les détails d\'une commande')]
     #[Route('/api/orders/{id}', name: 'getOrderById', methods: ['GET'])]
     public function getOrderById(Order $order): JsonResponse
     {
